@@ -1,5 +1,6 @@
 package com.spring.calculator;
 
+import jakarta.validation.Valid;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -7,6 +8,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,7 +39,11 @@ public class CalculatorController {
     @PostMapping("/calculate")
     // @RequestParam anotacija perduoda per URL perduodus duomenis (String, String) kurie patalpinami HasMap (K,V)
 
-    public String calculate(@RequestParam HashMap<String, String> inputForm, ModelMap outputForm) {
+    public String calculate(
+            //Svarbu: parametras BidingRezult turi eiti iskarto po anotacijos @Valid
+            //Kitu atveju gausite klaida "Validation failed for object"
+            @Valid @ModelAttribute("number") Number numb, BindingResult bindingResult,
+            @RequestParam HashMap<String, String> inputForm, ModelMap outputForm) {
 
         //Per URL perduodamas key, turi pavadinima sk1
         //pagal key sk1 ištraukiama reikšmė, pvz. vartotojas įvėdė 8
@@ -46,48 +52,52 @@ public class CalculatorController {
         //Key tiek fronted tiek backed turi sutapti
         //URL pvz  http://localhost:8080/calc?sk1=20&sk2=20&action=*
         //simboliai koduojasi https://meyerweb.com/eric/tools/dencoder/
+        //Jeigu validacijos klaidos (zr. Number klaseje aprasyta validacija, priekyje kiekvieno skaiciaus)
+        if (bindingResult.hasErrors()) {
+            //vartotojas lieka skaiciuotuvo puslapyje tol, kol neistaiso validacijos klaidu.
+            return "calculator";
+        } else {//vartotojas praejo validacija - skaiciuoajmas rezultatas
+            int sk1 = Integer.parseInt(inputForm.get("sk1"));
+            int sk2 = Integer.parseInt(inputForm.get("sk2"));
+            String action = inputForm.get("action");
+
+            double result = 0;
+            switch (action) {
+                case "*":
+                    result = sk1 * sk2;
+                    break;
+                case "/":
+                    if (sk1 != 0) {
+                        result = sk1 / sk2;
+
+                    } else {
+                        return "error";
+                    }
+                    break;
+                case "-":
+                    result = sk1 - sk2;
+                    break;
+                case "+":
+                    result = sk1 + sk2;
+                    break;
+            }
 
 
-        int sk1 = Integer.parseInt(inputForm.get("sk1"));
-        int sk2 = Integer.parseInt(inputForm.get("sk2"));
-        String action = inputForm.get("action");
-
-        double result = 0;
-        switch (action) {
-            case "*":
-                result = sk1 * sk2;
-                break;
-            case "/":
-                if (sk1 != 0) {
-                    result = sk1 / sk2;
-
-                } else {
-                    return "error";
-                }
-                break;
-            case "-":
-                result = sk1 - sk2;
-                break;
-            case "+":
-                result = sk1 + sk2;
-                break;
-        }
-
-        //TODO suskaičiuoti ir atspausdinti rezultata, kas iš ko
-        // int result = sk1 * sk2 ;
-        //inputForm naudojamas siųsi duomenis iš spring MVC controller į JSP failą (vaizdą)
-        outputForm.put("sk1", sk1);
-        outputForm.put("sk2", sk2);
-        outputForm.put("action", action);
-        outputForm.put("result", result);
+            //TODO suskaičiuoti ir atspausdinti rezultata, kas iš ko
+            // int result = sk1 * sk2 ;
+            //inputForm naudojamas siųsi duomenis iš spring MVC controller į JSP failą (vaizdą)
+            outputForm.put("sk1", sk1);
+            outputForm.put("sk2", sk2);
+            outputForm.put("action", action);
+            outputForm.put("result", result);
 
 
-        //grąžinamas vaizdas (forma .jsp)
-        //svarbu nurodyti per application.properties prefix ir suffix nes pagal tai ieškos vaizdo projekte
-        return "calculate";
-        // ApplicationContext yra interface skirtassuteikti informaciją apie aplikacijos konfigūraciją.
-        //Šiuo atveju naudojama konfigūracija paimam iš xml failo
-        //  ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
+            //grąžinamas vaizdas (forma .jsp)
+            //svarbu nurodyti per application.properties prefix ir suffix nes pagal tai ieškos vaizdo projekte
+            return "calculate";
+            // ApplicationContext yra interface skirtassuteikti informaciją apie aplikacijos konfigūraciją.
+            //Šiuo atveju naudojama konfigūracija paimam iš xml failo
+            //  ApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml");
 
 
 //        return "Internet calculator <br><br>" +
@@ -97,15 +107,17 @@ public class CalculatorController {
 //                "<li> Dauginti </li>" +
 //                "<li> <a href='dalinti'>Dalinti</a> </li></ul>";
 
-        //bean -  kalses objektas, kuris atitinka singleton pattern
-        //   HelloWorld bean = (HelloWorld) applicationContext.getBean("helloWorld");
-        //  return bean.getHello();
+            //bean -  kalses objektas, kuris atitinka singleton pattern
+            //   HelloWorld bean = (HelloWorld) applicationContext.getBean("helloWorld");
+            //  return bean.getHello();
 
-
+        }
     }
 
     @GetMapping("/")
-    public String homePage() {
+    public String homePage(Model model) {
+        //Jeigu Model'number' nepraeina validacijos - per ji grazinamos validacijos klaidos i View
+        model.addAttribute("number", new Number());
         //grąžiname JSP failą, kuris turi būti talpinamas "webapp -> WEB-INF ->  JSP" folderi
         return "calculator";
     }

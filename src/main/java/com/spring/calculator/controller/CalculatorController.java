@@ -75,7 +75,7 @@ public class CalculatorController {
                     result = sk1 * sk2;
                     break;
                 case "/":
-                    if (sk1 != 0) {
+                    if (sk2 != 0) {
                         result = (double) sk1 / sk2;
 
                     } else {
@@ -130,6 +130,42 @@ public class CalculatorController {
         model.addAttribute("number", new Number());
         //grąžiname JSP failą, kuris turi būti talpinamas "webapp -> WEB-INF ->  JSP" folderi
         return "calculator";
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/numbers")
+    public  String getAllNumbers(Model model){
+        model.addAttribute("numbers", numberService.getAll());
+        return "numbers";
+    }
+
+    //id - gaunamas is front end vartotojui pasirinkus konkretu irasa
+    @RequestMapping(method = RequestMethod.GET, value = "/show{id}")
+    public  String getById(@RequestParam ("id") int id, Model model){
+        model.addAttribute("number",numberService.getById(id));
+        return "number";
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/delete{id}")
+    public  String deleteById(@RequestParam ("id") int id, Model model){
+        numberService.delete(id);
+        model.addAttribute("numbers",numberService.getAll());
+        return "numbers";
+    }
+
+    //atnaujinant irasa, pirmiausia reikai ji parodyti
+    @RequestMapping(method = RequestMethod.GET, value = "/update{id}")
+    public  String updateById(@RequestParam ("id") int id, Model model){
+        numberService.delete(id);
+        model.addAttribute("number",numberService.getById(id));
+        return "update";
+    }
+
+    //Kadangi forma naudoja metoda POST, cia irgi nurodome POST
+    @RequestMapping(method = RequestMethod.GET, value = "/updateNumber{id}")
+    public String updateNumber(@ModelAttribute("number") Number number){
+        numberService.update(number);
+        //redirect - nukreipia vartotoja i iraso atvaizdavimo puslapi (getById)
+        return "redirect:/show?id=" + number.getId();
     }
 
 

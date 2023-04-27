@@ -54,7 +54,10 @@ public class Number {
     public int getId() {
         return id;
     }
-
+    //butinas setID, kad model vaiksciotu tarp front ir back end
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getSk1() {
         return sk1;

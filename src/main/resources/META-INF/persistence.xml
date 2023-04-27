@@ -16,7 +16,9 @@
             <property name="javax.persistence.jdbc.password" value=""/>
             <property name="hibernate.show_sql" value="true"/>
             <!--tells hibernate to update the database schema each time the session factory is created. -->
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
-        </properties>
-    </persistence-unit>
+
+            <!-- Pirma karta paleidus aplikacija turi buti 'create', o antra karta jei viskas gerai grazinti 'update'-->
+           <property name="hibernate.hbm2ddl.auto" value="update"/>
+       </properties>
+   </persistence-unit>
 </persistence>

@@ -1,16 +1,18 @@
-package com.spring.calculator;
+package com.spring.calculator.controller;
 
+import com.spring.calculator.model.Number;
+import com.spring.calculator.model.Student;
+import com.spring.calculator.service.NumberService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +36,12 @@ import java.util.List;
 //Šiuo atveju ji veikia kartu su main method
 @EnableAutoConfiguration
 public class CalculatorController {
+
+    //Kaip perduodami duomenys skirtingiems komponentams:
+    //vartotojas -> CalculatorCOntroller -> NumberServiceImpl -> NumberDAOImpl
+    @Autowired
+    @Qualifier("NumberService")
+    public NumberService numberService;
 
     //kadangi skaiciuotuvo forma naudoja POST f-ja, cia irgi nurodysime POST
     @PostMapping("/calculate")
@@ -68,7 +76,7 @@ public class CalculatorController {
                     break;
                 case "/":
                     if (sk1 != 0) {
-                        result = sk1 / sk2;
+                        result = (double) sk1 / sk2;
 
                     } else {
                         return "error";
@@ -90,6 +98,8 @@ public class CalculatorController {
             outputForm.put("sk2", sk2);
             outputForm.put("action", action);
             outputForm.put("result", result);
+
+            numberService.insert(new Number(sk1,sk2,action,result));
 
 
             //grąžinamas vaizdas (forma .jsp)
